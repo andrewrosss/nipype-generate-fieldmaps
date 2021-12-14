@@ -24,8 +24,6 @@ INPUT_FIELDS = [
 ]
 OUTPUT_FIELDS = [
     "acq_params_file",
-    "echospacing",
-    "pedir",
     "corrected_se_epi_file",
     "fmap_hz_file",
     "fmap_rads_file",
@@ -43,7 +41,6 @@ PE_UVECTORS: dict[str, tuple[int, int, int]] = {  # unit vectors
     "j-": (0, -1, 0),
     "k-": (0, 0, -1),
 }
-EPI_REG_PEDIRS = {"i": "x", "j": "y", "k": "z", "i-": "-x", "j-": "-y", "k-": "-z"}
 
 
 def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
@@ -52,33 +49,6 @@ def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
     wf.config["execution"]["remove_unnecessary_outputs"] = "false"
 
     inputnode = Node(IdentityInterface(fields=INPUT_FIELDS), name="inputnode")
-
-    # extract the effective echospacing
-    effective_echospacing = Node(
-        Function(
-            input_names=["sidecar_file"],
-            output_names=["effective_echospacing"],
-            function=_extract_effective_echo_spacing_fi,
-        ),
-        name="effective_echo_spacing",
-    )
-    wf.connect(
-        inputnode,
-        "se_epi_sidecar_pe1_file",
-        effective_echospacing,
-        "sidecar_file",
-    )
-
-    # extract the epi_reg-compatible phase-encoding direction
-    pedir = Node(
-        Function(
-            input_names=["sidecar_file"],
-            output_names=["pedir"],
-            function=_extract_pedir_fi,
-        ),
-        name="pedir",
-    )
-    wf.connect(inputnode, "se_epi_sidecar_pe1_file", pedir, "sidecar_file")
 
     # pre-concatenation (need images in a list)
     listify_se_epi_files = Node(Merge(numinputs=2), name="listify_se_epi_files")
@@ -142,8 +112,6 @@ def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
     # To the outside world!
     outputnode = Node(IdentityInterface(fields=OUTPUT_FIELDS), name="outputnode")
     wf.connect(acq_params, "out_file", outputnode, "acq_params_file")
-    wf.connect(effective_echospacing, "echospacing", outputnode, "echospacing")
-    wf.connect(pedir, "pedir", outputnode, "pedir")
     wf.connect(topup, "out_corrected", outputnode, "corrected_se_epi_file")
     wf.connect(topup, "out_field", outputnode, "fmap_hz_file")
     wf.connect(fmap_rads, "out_file", outputnode, "fmap_rads_file")
@@ -155,18 +123,6 @@ def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
 
 
 # INTERFACES (fi = [F]unction [I]nterface)
-
-
-def _extract_effective_echo_spacing_fi(sidecar_file):
-    from nipype_generate_fieldmaps import extract_effective_echo_spacing
-
-    return extract_effective_echo_spacing(sidecar_file)
-
-
-def _extract_pedir_fi(sidecar_file):
-    from nipype_generate_fieldmaps import extract_pedir
-
-    return extract_pedir(sidecar_file)
 
 
 def _create_acq_param_file_fi(
@@ -186,16 +142,6 @@ def _create_acq_param_file_fi(
 
 
 # UTILITIES
-
-
-def extract_effective_echo_spacing(sidecar_file: str | Path) -> float:
-    sidecar = json.loads(Path(sidecar_file).read_text())
-    return get_effective_echo_spacing(sidecar)
-
-
-def extract_pedir(sidecar_file: str | Path) -> str:
-    sidecar = json.loads(Path(sidecar_file).read_text())
-    return get_phase_encoding_xyz(sidecar)
 
 
 def create_acq_param_file(
@@ -272,8 +218,3 @@ def get_effective_echo_spacing(sidecar: dict[str, Any]) -> float:
 def get_phase_encoding_vec(sidecar: dict[str, Any]) -> tuple[int, int, int]:
     pe: str = sidecar["PhaseEncodingDirection"]
     return PE_UVECTORS[pe]
-
-
-def get_phase_encoding_xyz(sidecar: dict[str, Any]) -> str:
-    pe: str = sidecar["PhaseEncodingDirection"]
-    return EPI_REG_PEDIRS[pe]
