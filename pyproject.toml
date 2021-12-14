@@ -4,6 +4,31 @@ version = "0.1.0"
 description = "Nipype workflow to generate fieldmaps from EPI acquisitions with differing phase-encoding directions"
 authors = ["Andrew Ross <andrew.ross.mail@gmail.com>"]
 
+readme = "README.md"
+
+keywords = ["neuroscience", "neuroimaging", "nipype", "mri", "fieldmaps", 'fsl']
+
+homepage = "https://github.com/andrewrosss/nipype-generate-fieldmaps"
+repository = "https://github.com/andrewrosss/nipype-generate-fieldmaps"
+documentation = "https://github.com/andrewrosss/nipype-generate-fieldmaps"
+
+classifiers = [
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Operating System :: MacOS",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+
 [tool.poetry.dependencies]
 python = "^3.8"
 nipype = "^1.1.0"
