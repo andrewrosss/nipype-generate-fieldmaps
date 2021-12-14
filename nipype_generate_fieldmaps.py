@@ -36,6 +36,7 @@ OUTPUT_FIELDS = [
 def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
 
     wf = Workflow(name=name)
+    wf.config["execution"]["remove_unnecessary_outputs"] = "false"
 
     inputnode = Node(IdentityInterface(fields=INPUT_FIELDS), name="inputnode")
 
@@ -71,7 +72,7 @@ def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
 
     # estimate the fieldmaps via FSL's TOPUP
     topup = Node(
-        fsl.TOPUP(out_field="fmap.nii.gz", out_corrected="corrected.nii.gz"),
+        fsl.TOPUP(out_field="fmap_hz.nii.gz", out_corrected="corrected.nii.gz"),
         name="topup",
     )
     wf.connect(merge_se_epi_files, "merged_file", topup, "in_file")
