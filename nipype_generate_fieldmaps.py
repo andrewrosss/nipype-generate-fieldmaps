@@ -176,6 +176,12 @@ def get_total_readout_time(sidecar: dict[str, Any]) -> float:
         effective_echo_spacing: float = sidecar["EffectiveEchoSpacing"]
         recon_matrix_pe: float = sidecar["ReconMatrixPE"]
         total_readout_time = (recon_matrix_pe - 1) * effective_echo_spacing
+    elif "BandwidthPerPixelPhaseEncode" in sidecar and "ReconMatrixPE" in sidecar:
+        # can we compute it another way?
+        bpppe: float = sidecar["BandwidthPerPixelPhaseEncode"]
+        recon_matrix_pe: float = sidecar["ReconMatrixPE"]
+        effective_echo_spacing = 1 / (bpppe * recon_matrix_pe)
+        total_readout_time = (recon_matrix_pe - 1) * effective_echo_spacing
     else:
         msg = "Could not extract or derive Total Readout Time from fieldmap sidecar."
         raise RuntimeError(msg)
