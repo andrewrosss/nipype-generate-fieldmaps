@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 from itertools import chain
 from pathlib import Path
@@ -19,8 +20,8 @@ __version__ = "0.1.0"
 INPUT_FIELDS = [
     "se_epi_pe1_file",
     "se_epi_pe2_file",
-    "se_epi_sidecar_pe1_file",
-    "se_epi_sidecar_pe2_file",
+    "se_epi_pe1_sidecar_file",
+    "se_epi_pe2_sidecar_file",
 ]
 OUTPUT_FIELDS = [
     "acq_params_file",
@@ -77,8 +78,8 @@ def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
         name="acq_params",
     )
     wf.connect(merge_se_epi_files, "merged_file", acq_params, "merged_se_epi_file")
-    wf.connect(inputnode, "se_epi_sidecar_pe1_file", acq_params, "sidecar_pe1_file")
-    wf.connect(inputnode, "se_epi_sidecar_pe2_file", acq_params, "sidecar_pe2_file")
+    wf.connect(inputnode, "se_epi_pe1_sidecar_file", acq_params, "sidecar_pe1_file")
+    wf.connect(inputnode, "se_epi_pe2_sidecar_file", acq_params, "sidecar_pe2_file")
 
     # estimate the fieldmaps via FSL's TOPUP
     topup = Node(
@@ -218,3 +219,81 @@ def get_effective_echo_spacing(sidecar: dict[str, Any]) -> float:
 def get_phase_encoding_vec(sidecar: dict[str, Any]) -> tuple[int, int, int]:
     pe: str = sidecar["PhaseEncodingDirection"]
     return PE_UVECTORS[pe]
+
+
+def cli() -> int:
+    parser = create_parser()
+    args = parser.parse_args()
+
+    if hasattr(args, "handler"):
+        return args.handler(args)
+
+    parser.print_help()
+    return 1
+
+
+def create_parser(
+    parser: argparse.ArgumentParser | None = None,
+) -> argparse.ArgumentParser:
+    description = (
+        "Generate fieldmaps from EPI acquisitions with differing "
+        "phase-encoding directions"
+    )
+    _parser = parser or argparse.ArgumentParser(description=description)
+    _parser.add_argument("-v", "--version", action="version", version=__version__)
+    _parser.add_argument(
+        "se_epi_pe1",
+        type=Path,
+        help="The spin-echo EPI file acquired in the 'first' phase-encoding direction",
+    )
+    _parser.add_argument(
+        "se_epi_pe2",
+        type=Path,
+        help="The spin-echo EPI file acquired in the 'second' phase-encoding direction",
+    )
+    _parser.add_argument(
+        "se_epi_pe1_sidecar",
+        type=Path,
+        help="The JSON sidecar for the first spin-echo EPI file",
+    )
+    _parser.add_argument(
+        "se_epi_pe2_sidecar",
+        type=Path,
+        help="The JSON sidecar for the second spin-echo EPI file",
+    )
+    _parser.add_argument(
+        "out_dir",
+        type=Path,
+        help="The directory into which outputs are written",
+    )
+
+    _parser.set_defaults(handler=handler)
+
+    return _parser
+
+
+def handler(args: argparse.Namespace) -> int:
+    se_epi_pe1: Path = args.se_epi_pe1
+    se_epi_pe2: Path = args.se_epi_pe2
+    se_epi_pe1_sidecar: Path = args.se_epi_pe1_sidecar
+    se_epi_pe2_sidecar: Path = args.se_epi_pe2_sidecar
+    out_dir: Path = args.out_dir
+
+    # create the workflow
+    wf = create_prepare_fieldmaps_wf()
+
+    # wire-up the workflow
+    wf.base_dir = out_dir.expanduser().resolve()
+    wf.inputs.inputnode.se_epi_pe1_file = se_epi_pe1.expanduser().resolve()
+    wf.inputs.inputnode.se_epi_pe2_file = se_epi_pe2.expanduser().resolve()
+    wf.inputs.inputnode.se_epi_sidecar_pe1_file = (
+        se_epi_pe1_sidecar.expanduser().resolve()
+    )
+    wf.inputs.inputnode.se_epi_sidecar_pe2_file = (
+        se_epi_pe2_sidecar.expanduser().resolve()
+    )
+
+    # run it!
+    wf.run()
+
+    return 0
