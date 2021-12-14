@@ -65,6 +65,26 @@ wf.connect(fmap_wf, 'outputnode.echospacing', epireg, 'echospacing')
 wf.connect(fmap_wf, 'outputnode.pedir', epireg, 'pedir')
 ```
 
+### From the command line
+
+```bash
+$ nipype-generate-fieldmaps --help
+usage: nipype-generate-fieldmaps [-h] [-v] se_epi_pe1 se_epi_pe2 se_epi_pe1_sidecar se_epi_pe2_sidecar out_dir
+
+Generate fieldmaps from EPI acquisitions with differing phase-encoding directions
+
+positional arguments:
+  se_epi_pe1          The spin-echo EPI file acquired in the 'first' phase-encoding direction
+  se_epi_pe2          The spin-echo EPI file acquired in the 'second' phase-encoding direction
+  se_epi_pe1_sidecar  The JSON sidecar for the first spin-echo EPI file
+  se_epi_pe2_sidecar  The JSON sidecar for the second spin-echo EPI file
+  out_dir             The directory into which outputs are written
+
+optional arguments:
+  -h, --help          show this help message and exit
+  -v, --version       show program's version number and exit
+```
+
 ## Prerequisites
 
 This workflow has a few requirements:
