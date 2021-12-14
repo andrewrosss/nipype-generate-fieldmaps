@@ -4,17 +4,127 @@ Nipype workflow to generate fieldmaps from EPI acquisitions with differing phase
 
 ## Installation
 
-...
+```bash
+pip install nipype-generate-fieldmaps
+```
 
 ## Usage
 
-...
+### As a stand-alone workflow
+
+```python
+# create the workflow
+wf = create_prepare_fieldmaps_wf()
+
+# wire-up the inputs
+wf.inputs.inputnode.se_epi_pe1_file = my_se_epi_pe1_file  # type: str | Path
+wf.inputs.inputnode.se_epi_pe2_file = my_se_epi_pe2_file  # type: str | Path
+wf.inputs.inputnode.se_epi_sidecar_pe1_file = my_se_epi_sidecar_pe1_file  # type: str | Path
+wf.inputs.inputnode.se_epi_sidecar_pe2_file = my_se_epi_sidecar_pe2_file  # type: str | Path
+
+# set the output directory
+wf.base_dir = my_output_dir  # type: str | Path
+
+# run it
+wf.run()
+```
+
+### As a nested workflow
+
+The nodes `node1`, `node2`, `some_other_node`, `maybe_a_4th_node`, `epi_node`, and `anat_node` are made up for demonstration purposes
+
+```python
+from nipype import Workflow
+from nipype.interfaces.fsl import EpiReg
+from nipype_generate_fieldmaps import create_prepare_fieldmaps_wf
+
+# parent workflow defined elsewhere
+wf = Workflow(...)
+
+# create the (sub-)workflow
+fmap_wf = create_prepare_fieldmaps_wf()
+
+# connect the various nodes form the parent workflow to the nested fieldmap workflow
+wf.connect(node1, 'out_file', fmap_wf, 'inputnode.se_epi_pe1_file')
+wf.connect(node2, 'out', fmap_wf, 'inputnode.se_epi_pe2_file')
+wf.connect(some_other_node, 'output_file', fmap_wf, 'inputnode.se_epi_sidecar_pe1_file')
+wf.connect(maybe_a_4th_node, 'sidecar_file', fmap_wf, 'inputnode.se_epi_sidecar_pe2_file')
+
+# connect the fieldmap workflow outputs to one (or more) node(s) in the parent workflow
+# for example: EpiReg()
+epireg = Node(EpiReg(out_base='epi2str.nii.gz'), name='epi_reg')
+# from elsewhere
+wf.connect(epi_node, 'my_epi_file' epireg, 'epi')
+wf.connect(anat_node, 'my_t1_file', epireg, 't1_head')
+wf.connect(anat_node, 'my_t1_brain_file', epireg, 't1_brain')
+# from the fieldmap workflow!
+wf.connect(fmap_wf, 'outputnode.fmap_rads_file', epireg, 'fmap')
+wf.connect(fmap_wf, 'outputnode.fmap_mag_file', epireg, 'fmapmag')
+wf.connect(fmap_wf, 'outputnode.fmap_mag_brain_file', epireg, 'fmapmagbrain')
+wf.connect(fmap_wf, 'outputnode.echospacing', epireg, 'echospacing')
+wf.connect(fmap_wf, 'outputnode.pedir', epireg, 'pedir')
+```
 
 ## Prerequisites
 
-- have two fieldmap acquisitions with differing phase encodings
-- num vols in PE dir 1 == num vols in PE dir 2
-- each fieldmap file has a sidecar with either:
-  - TotalReadoutTime & PhaseEncodingDirection
-  - EffectiveEchoSpacing & ReconMatrixPE & PhaseEncodingDirection
-- need `graphviz` installed (potentially)
+This workflow has a few requirements:
+
+1. There are **two** acquisitions (i.e. `.nii.gz` files) acquired with different phase encodings, usually opposite phase encodings.
+2. Num volumes in acquisition 1 **equals** Num volumes in acquisition 2
+3. Each acquisition has a JSON sidecar. Specifically, this workflow only requires that _each_ sidecar contain one of the following sets of properties. These properties are listed in the order in which the workflow will search:
+
+   - `PhaseEncodingDirection` and `TotalReadoutTime`, or
+   - `PhaseEncodingDirection`, `ReconMatrixPE`, and `EffectiveEchoSpacing`, or
+   - `PhaseEncodingDirection`, `ReconMatrixPE`, and `BandwidthPerPixelPhaseEncode`
+
+   If either JSON sidecar does not contain one of these three sets of parameters the workflow will produce an error.
+
+## I/O
+
+This workflow requires 4 inputs to be connected to the node named `inputnode`:
+
+- **`se_epi_pe1_file`**
+
+  The spin-echo EPI file acquired in the 'first' phase-encoding direction
+
+- **`se_epi_pe2_file`**
+
+  The spin-echo EPI file acquired in the 'second' phase-encoding direction
+
+- **`se_epi_sidecar_pe1_file`**
+
+  The JSON sidecar for the first spin-echo EPI file
+
+- **`se_epi_sidecar_pe2_file`**
+
+  The JSON sidecar for the second spin-echo EPI file
+
+This workflow also exposes the following outputs via the node named `outputnode`:
+
+- **`acq_params_file`**
+
+  The computed file passed to the `--datain` option of `topup`
+
+- **`corrected_se_epi_file`**
+
+  The `.nii.gz` image containing all _distortion corrected_ volumes from the two input acquisitions
+
+- **`fmap_hz_file`**
+
+  The fieldmap in hertz (Hz)
+
+- **`fmap_rads_file`**
+
+  The fieldmap in radians per second (rad/s)
+
+- **`fmap_mag_file`**
+
+  The 'magnitude' image (mean image) computed by averaging all volumes in `corrected_se_epi_file`
+
+- **`fmap_mag_brain_file`**
+
+  The result of applying brain-extraction to `fmap_mag_file`
+
+- **`fmap_mag_brain_mask_file`**
+
+  The brain mask produced during the brain-extraction of `fmap_mag_file`
