@@ -1,6 +1,10 @@
 .vscode
 *.dot
 *.png
+*tmp/
+t.*
+tmp*
+*crash-*
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
