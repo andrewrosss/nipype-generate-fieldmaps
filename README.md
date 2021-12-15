@@ -89,15 +89,15 @@ optional arguments:
 
 This workflow has a few requirements:
 
-1. There are **two** acquisitions (i.e. `.nii.gz` files) acquired with different phase encodings, usually opposite phase encodings.
-2. Num volumes in acquisition 1 **equals** Num volumes in acquisition 2
-3. Each acquisition has a JSON sidecar. Specifically, this workflow only requires that _each_ sidecar contain one of the following sets of properties. These properties are listed in the order in which the workflow will search:
+1. There are **two** acquisitions (i.e. `.nii.gz` files) acquired with **different** phase encodings, usually opposite phase encodings but this need not be the case.
+2. The number of volumes in acquisition 1 (the first phase encoding direction) **equals** the number of volumes in acquisition 2 (the second phase encoding direction)
+3. Each acquisition has a JSON sidecar. Specifically, this workflow requires that _each_ sidecar contain one of the following sets of properties. These properties are listed in the order in which the workflow will search:
 
    - `PhaseEncodingDirection` and `TotalReadoutTime`, or
    - `PhaseEncodingDirection`, `ReconMatrixPE`, and `EffectiveEchoSpacing`, or
    - `PhaseEncodingDirection`, `ReconMatrixPE`, and `BandwidthPerPixelPhaseEncode`
 
-   If either JSON sidecar does not contain one of these three sets of parameters the workflow will produce an error.
+   If either JSON sidecar fails to contain at least one of the above sets of parameters the workflow will produce an error.
 
 ## I/O
 
