@@ -148,3 +148,14 @@ This workflow also exposes the following outputs via the node named `outputnode`
 - **`fmap_mag_brain_mask_file`**
 
   The brain mask produced during the brain-extraction of `fmap_mag_file`
+
+## Contributing
+
+1. Have or install a recent version of `poetry` (version >= 1.1)
+1. Fork the repo
+1. Setup a virtual environment (however you prefer)
+1. Run `poetry install`
+1. Run `pre-commit install`
+1. Add your changes
+1. Commit your changes + push to your fork
+1. Open a PR
