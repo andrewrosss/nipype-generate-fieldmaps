@@ -44,7 +44,7 @@ PE_UVECTORS: dict[str, tuple[int, int, int]] = {  # unit vectors
 }
 
 
-def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
+def create_generate_fieldmaps_wf(name: str = "generate_fieldmaps_wf") -> Workflow:
 
     wf = Workflow(name=name)
     wf.config["execution"]["remove_unnecessary_outputs"] = "false"
@@ -68,8 +68,8 @@ def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
         Function(
             input_names=[
                 "merged_se_epi_file",
-                "sidecar_pe1_file",
-                "sidecar_pe2_file",
+                "pe1_sidecar_file",
+                "pe2_sidecar_file",
                 "out_file",
             ],
             output_names=["out_file"],
@@ -78,8 +78,8 @@ def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
         name="acq_params",
     )
     wf.connect(merge_se_epi_files, "merged_file", acq_params, "merged_se_epi_file")
-    wf.connect(inputnode, "se_epi_pe1_sidecar_file", acq_params, "sidecar_pe1_file")
-    wf.connect(inputnode, "se_epi_pe2_sidecar_file", acq_params, "sidecar_pe2_file")
+    wf.connect(inputnode, "se_epi_pe1_sidecar_file", acq_params, "pe1_sidecar_file")
+    wf.connect(inputnode, "se_epi_pe2_sidecar_file", acq_params, "pe2_sidecar_file")
 
     # estimate the fieldmaps via FSL's TOPUP
     topup = Node(
@@ -128,16 +128,16 @@ def create_prepare_fieldmaps_wf(name: str = "prepare_fieldmaps_wf") -> Workflow:
 
 def _create_acq_param_file_fi(
     merged_se_epi_file,
-    sidecar_pe1_file,
-    sidecar_pe2_file,
+    pe1_sidecar_file,
+    pe2_sidecar_file,
     out_file=None,
 ):
     from nipype_generate_fieldmaps import create_acq_param_file
 
     return create_acq_param_file(
         merged_se_epi_file,
-        sidecar_pe1_file,
-        sidecar_pe2_file,
+        pe1_sidecar_file,
+        pe2_sidecar_file,
         out_file,
     )
 
@@ -147,21 +147,21 @@ def _create_acq_param_file_fi(
 
 def create_acq_param_file(
     merged_se_epi_file: str | Path,
-    sidecar_pe1_file: str | Path,
-    sidecar_pe2_file: str | Path,
+    pe1_sidecar_file: str | Path,
+    pe2_sidecar_file: str | Path,
     out_file: str | Path | None = None,
 ) -> Path:
     # load JSON sidecars
-    sidecar_pe1 = json.loads(Path(sidecar_pe1_file).read_text())
-    sidecar_pe2 = json.loads(Path(sidecar_pe2_file).read_text())
+    pe1_sidecar = json.loads(Path(pe1_sidecar_file).read_text())
+    pe2_sidecar = json.loads(Path(pe2_sidecar_file).read_text())
 
     # total readout times
-    trt_pe1 = get_total_readout_time(sidecar_pe1)
-    trt_pe2 = get_total_readout_time(sidecar_pe2)
+    trt_pe1 = get_total_readout_time(pe1_sidecar)
+    trt_pe2 = get_total_readout_time(pe2_sidecar)
 
     # phase encoding unit vectors
-    pe1_vec = get_phase_encoding_vec(sidecar_pe1)
-    pe2_vec = get_phase_encoding_vec(sidecar_pe2)
+    pe1_vec = get_phase_encoding_vec(pe1_sidecar)
+    pe2_vec = get_phase_encoding_vec(pe2_sidecar)
 
     # extract the number of volumes in the merged fieldmaps nii image
     img: nib.Nifti1Image = nib.load(str(merged_se_epi_file))
@@ -280,16 +280,16 @@ def handler(args: argparse.Namespace) -> int:
     out_dir: Path = args.out_dir
 
     # create the workflow
-    wf = create_prepare_fieldmaps_wf()
+    wf = create_generate_fieldmaps_wf()
 
     # wire-up the workflow
     wf.base_dir = out_dir.expanduser().resolve()
     wf.inputs.inputnode.se_epi_pe1_file = se_epi_pe1.expanduser().resolve()
     wf.inputs.inputnode.se_epi_pe2_file = se_epi_pe2.expanduser().resolve()
-    wf.inputs.inputnode.se_epi_sidecar_pe1_file = (
+    wf.inputs.inputnode.se_epi_pe1_sidecar_file = (
         se_epi_pe1_sidecar.expanduser().resolve()
     )
-    wf.inputs.inputnode.se_epi_sidecar_pe2_file = (
+    wf.inputs.inputnode.se_epi_pe2_sidecar_file = (
         se_epi_pe2_sidecar.expanduser().resolve()
     )
 

@@ -14,13 +14,13 @@ pip install nipype-generate-fieldmaps
 
 ```python
 # create the workflow
-wf = create_prepare_fieldmaps_wf()
+wf = create_generate_fieldmaps_wf()
 
 # wire-up the inputs
 wf.inputs.inputnode.se_epi_pe1_file = my_se_epi_pe1_file  # type: str | Path
 wf.inputs.inputnode.se_epi_pe2_file = my_se_epi_pe2_file  # type: str | Path
-wf.inputs.inputnode.se_epi_sidecar_pe1_file = my_se_epi_sidecar_pe1_file  # type: str | Path
-wf.inputs.inputnode.se_epi_sidecar_pe2_file = my_se_epi_sidecar_pe2_file  # type: str | Path
+wf.inputs.inputnode.se_epi_pe1_sidecar_file = my_se_epi_pe1_sidecar_file  # type: str | Path
+wf.inputs.inputnode.se_epi_pe2_sidecar_file = my_se_epi_pe2_sidecar_file  # type: str | Path
 
 # set the output directory
 wf.base_dir = my_output_dir  # type: str | Path
@@ -36,19 +36,19 @@ The nodes `node1`, `node2`, `some_other_node`, `maybe_a_4th_node`, `epi_node`, a
 ```python
 from nipype import Workflow
 from nipype.interfaces.fsl import EpiReg
-from nipype_generate_fieldmaps import create_prepare_fieldmaps_wf
+from nipype_generate_fieldmaps import create_generate_fieldmaps_wf
 
 # parent workflow defined elsewhere
 wf = Workflow(...)
 
 # create the (sub-)workflow
-fmap_wf = create_prepare_fieldmaps_wf()
+fmap_wf = create_generate_fieldmaps_wf()
 
 # connect the various nodes form the parent workflow to the nested fieldmap workflow
 wf.connect(node1, 'out_file', fmap_wf, 'inputnode.se_epi_pe1_file')
 wf.connect(node2, 'out', fmap_wf, 'inputnode.se_epi_pe2_file')
-wf.connect(some_other_node, 'output_file', fmap_wf, 'inputnode.se_epi_sidecar_pe1_file')
-wf.connect(maybe_a_4th_node, 'sidecar_file', fmap_wf, 'inputnode.se_epi_sidecar_pe2_file')
+wf.connect(some_other_node, 'output_file', fmap_wf, 'inputnode.se_epi_pe1_sidecar_file')
+wf.connect(maybe_a_4th_node, 'sidecar_file', fmap_wf, 'inputnode.se_epi_pe2_sidecar_file')
 
 # connect the fieldmap workflow outputs to one (or more) node(s) in the parent workflow
 # for example: EpiReg()
@@ -111,11 +111,11 @@ This workflow requires 4 inputs to be connected to the node named `inputnode`:
 
   The spin-echo EPI file acquired in the 'second' phase-encoding direction
 
-- **`se_epi_sidecar_pe1_file`**
+- **`se_epi_pe1_sidecar_file`**
 
   The JSON sidecar for the first spin-echo EPI file
 
-- **`se_epi_sidecar_pe2_file`**
+- **`se_epi_pe2_sidecar_file`**
 
   The JSON sidecar for the second spin-echo EPI file
 
