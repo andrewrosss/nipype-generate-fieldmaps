@@ -15,7 +15,7 @@ from nipype import Node
 from nipype import Workflow
 from nipype.interfaces import fsl
 
-__version__ = "0.2.3rc0"
+__version__ = "0.2.3"
 
 
 INPUT_FIELDS = [
