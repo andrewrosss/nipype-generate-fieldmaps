@@ -61,8 +61,8 @@ wf.connect(anat_node, 'my_t1_brain_file', epireg, 't1_brain')
 wf.connect(fmap_wf, 'outputnode.fmap_rads_file', epireg, 'fmap')
 wf.connect(fmap_wf, 'outputnode.fmap_mag_file', epireg, 'fmapmag')
 wf.connect(fmap_wf, 'outputnode.fmap_mag_brain_file', epireg, 'fmapmagbrain')
-wf.connect(fmap_wf, 'outputnode.echospacing', epireg, 'echospacing')
-wf.connect(fmap_wf, 'outputnode.pedir', epireg, 'pedir')
+wf.connect(fmap_wf, 'outputnode.echo_spacing', epireg, 'echospacing')
+wf.connect(fmap_wf, 'outputnode.pe1_pedir', epireg, 'pedir')
 ```
 
 ### From the command line
