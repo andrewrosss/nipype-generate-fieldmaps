@@ -149,6 +149,10 @@ This workflow also exposes the following outputs via the node named `outputnode`
 
   The brain mask produced during the brain-extraction of `fmap_mag_file`
 
+## Workflow diagram
+
+![Workflow diagram](https://raw.githubusercontent.com/andrewrosss/nipype-generate-fieldmaps/master/assets/graph.png)
+
 ## Contributing
 
 1. Have or install a recent version of `poetry` (version >= 1.1)
