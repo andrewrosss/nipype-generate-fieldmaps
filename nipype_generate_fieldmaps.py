@@ -175,6 +175,7 @@ def create_generate_fieldmaps_wf(name: str = "generate_fieldmaps_wf") -> Workflo
 
 def _extract_effective_echo_spacing_fi(sidecar_file):
     import json
+    from pathlib import Path
     from nipype_generate_fieldmaps import get_effective_echo_spacing
 
     sidecar = json.loads(Path(sidecar_file).read_text())
@@ -183,6 +184,7 @@ def _extract_effective_echo_spacing_fi(sidecar_file):
 
 def _extract_pedir_fi(sidecar_file):
     import json
+    from pathlib import Path
     from nipype_generate_fieldmaps import get_phase_encoding_xyz
 
     sidecar = json.loads(Path(sidecar_file).read_text())
