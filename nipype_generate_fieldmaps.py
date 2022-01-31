@@ -68,7 +68,7 @@ def create_generate_fieldmaps_wf(name: str = "generate_fieldmaps_wf") -> Workflo
     )
     wf.connect(
         inputnode,
-        "se_epi_sidecar_pe1_file",
+        "se_epi_pe1_file",
         effective_echo_spacing,
         "sidecar_file",
     )
@@ -82,7 +82,7 @@ def create_generate_fieldmaps_wf(name: str = "generate_fieldmaps_wf") -> Workflo
         ),
         name="pe1_pedir",
     )
-    wf.connect(inputnode, "se_epi_sidecar_pe1_file", pe1_pedir, "sidecar_file")
+    wf.connect(inputnode, "se_epi_pe1_file", pe1_pedir, "sidecar_file")
 
     pe2_pedir = Node(
         Function(
@@ -92,7 +92,7 @@ def create_generate_fieldmaps_wf(name: str = "generate_fieldmaps_wf") -> Workflo
         ),
         name="pe2_pedir",
     )
-    wf.connect(inputnode, "se_epi_sidecar_pe2_file", pe2_pedir, "sidecar_file")
+    wf.connect(inputnode, "se_epi_pe1_file", pe2_pedir, "sidecar_file")
 
     # pre-concatenation (need images in a list)
     listify_se_epi_files = Node(Merge(numinputs=2), name="listify_se_epi_files")
