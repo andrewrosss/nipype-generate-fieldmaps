@@ -61,7 +61,7 @@ def create_generate_fieldmaps_wf(name: str = "generate_fieldmaps_wf") -> Workflo
     effective_echo_spacing = Node(
         Function(
             input_names=["sidecar_file"],
-            output_names=["effective_echo_spacing"],
+            output_names=["echo_spacing"],
             function=_extract_effective_echo_spacing_fi,
         ),
         name="effective_echo_spacing",
